@@ -11,7 +11,7 @@ public class CoreService {
     private CoreUtil coreUtil;
     private GoogleAuthService authService;
 
-    public void start() {
+    public void start() throws Exception {
         coreUtil = new CoreUtil();
         authService = new GoogleAuthService();
         registerMiddleware();
