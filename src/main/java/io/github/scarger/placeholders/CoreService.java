@@ -1,6 +1,7 @@
 package io.github.scarger.placeholders;
 
 import io.github.scarger.placeholders.route.AuthenticationRoute;
+import io.github.scarger.placeholders.route.LoginStatusRoute;
 import io.github.scarger.placeholders.service.GoogleAuthService;
 import io.github.scarger.placeholders.util.CoreUtil;
 
@@ -21,6 +22,7 @@ public class CoreService {
 
     private void registerRoutes() {
         post("/authenticate", "application/json", new AuthenticationRoute(this), coreUtil.toJson());
+        get("/auth/status", "application/json", new LoginStatusRoute(this), coreUtil.toJson());
     }
 
     private void registerMiddleware() {

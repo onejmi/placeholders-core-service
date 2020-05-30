@@ -3,11 +3,12 @@ package io.github.scarger.placeholders.route;
 import com.google.gson.JsonSyntaxException;
 import io.github.scarger.placeholders.CoreService;
 import io.github.scarger.placeholders.model.RequestError;
-import io.github.scarger.placeholders.model.request.AuthenticationRequestModel;
+import io.github.scarger.placeholders.model.request.AuthenticationRequest;
+import io.github.scarger.placeholders.model.response.AuthenticationResponse;
 import spark.Request;
 import spark.Response;
 
-public class AuthenticationRoute implements spark.Route{
+public class AuthenticationRoute implements spark.Route {
 
     private final CoreService context;
 
@@ -18,10 +19,9 @@ public class AuthenticationRoute implements spark.Route{
     @Override
     public Object handle(Request request, Response response) {
         try {
-            AuthenticationRequestModel authReq =
-                    context.util().gson().fromJson(request.body(), AuthenticationRequestModel.class);
-            return context.getAuth().authenticate(authReq);
-
+            AuthenticationRequest authReq =
+                    context.util().gson().fromJson(request.body(), AuthenticationRequest.class);
+            return new AuthenticationResponse(context.getAuth().authenticate(authReq).getSubject());
         } catch (JsonSyntaxException e) {
             return new RequestError(422, "Invalid request format.");
         }

@@ -1,10 +1,10 @@
 package io.github.scarger.placeholders.model.request;
 
-public class AuthenticationRequestModel {
+public class AuthenticationRequest {
 
     private final String authCode;
 
-    public AuthenticationRequestModel(String authCode) {
+    public AuthenticationRequest(String authCode) {
         this.authCode = authCode;
     }
 
