@@ -2,13 +2,13 @@ package io.github.scarger.placeholders.model.response;
 
 public class AuthenticationResponse {
 
-    private final String subject;
+    private final String sessionId;
 
-    public AuthenticationResponse(String subject) {
-        this.subject = subject;
+    public AuthenticationResponse(String sessionId) {
+        this.sessionId = sessionId;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getSessionId() {
+        return sessionId;
     }
 }

@@ -8,8 +8,10 @@ import io.github.scarger.placeholders.model.response.AuthenticationResponse;
 import io.github.scarger.placeholders.model.request.AuthenticationRequest;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.UUID;
 
 public class GoogleAuthService {
 
@@ -22,6 +24,8 @@ public class GoogleAuthService {
 
     private final GoogleIdTokenVerifier tokenVerifier;
     private final GoogleAuthorizationCodeFlow codeFlow;
+
+    private final MessageDigest md;
 
     public GoogleAuthService() throws Exception {
         transport = GoogleNetHttpTransport.newTrustedTransport();
@@ -42,6 +46,7 @@ public class GoogleAuthService {
                         .setAccessType("offline")
                         .setDataStoreFactory(new MemoryDataStoreFactory())
                         .build();
+        md = MessageDigest.getInstance("MD5");
     }
 
 
@@ -62,24 +67,28 @@ public class GoogleAuthService {
                     .setRedirectUri(redirectURL)
                     .execute();
 
-            GoogleIdToken idToken = tokenVerifier.verify(tokenResponse.getIdToken());
-
-            if(idToken != null) {
-                codeFlow.createAndStoreCredential(tokenResponse, idToken.getPayload().getSubject());
-                return new AuthenticationResponse(idToken.getPayload().getSubject());
-            }
-            else return null;
+            String sessionId = UUID.randomUUID().toString();
+            codeFlow.createAndStoreCredential(tokenResponse, sessionId);
+            return new AuthenticationResponse(sessionId);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public boolean isLoggedIn(String sub) {
+    public boolean isLoggedIn(String sessionId) {
         try {
-            return codeFlow.getCredentialDataStore().containsKey(sub);
+            return codeFlow.getCredentialDataStore().containsKey(sessionId);
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    public void invalidate(String sessionId) {
+        try {
+            codeFlow.getCredentialDataStore().delete(sessionId);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
