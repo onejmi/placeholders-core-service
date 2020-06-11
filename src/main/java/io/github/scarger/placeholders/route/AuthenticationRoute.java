@@ -21,7 +21,7 @@ public class AuthenticationRoute implements spark.Route {
         try {
             AuthenticationRequest authReq =
                     context.util().gson().fromJson(request.body(), AuthenticationRequest.class);
-            return new AuthenticationResponse(context.getAuth().authenticate(authReq).getSessionId());
+            return new AuthenticationResponse(context.getAuth().authenticate(authReq.getAuthCode()));
         } catch (JsonSyntaxException e) {
             return new RequestError(422, "Invalid request format.");
         }

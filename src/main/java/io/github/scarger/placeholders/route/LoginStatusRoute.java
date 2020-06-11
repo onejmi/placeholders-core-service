@@ -17,8 +17,8 @@ public class LoginStatusRoute implements spark.Route {
     @Override
     public Object handle(Request request, Response response) {
         try {
-            return new LoginStatusResponse(context.getAuth().isLoggedIn(
-                    request.queryMap("session_id").value()
+            return new LoginStatusResponse(context.getSessionManager().isLoggedIn(
+                    request.cookie("ph_sid")
                 )
             );
         } catch (Exception e) {

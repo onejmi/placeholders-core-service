@@ -1,22 +1,26 @@
 package io.github.scarger.placeholders.service;
+
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.googleapis.auth.oauth2.*;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.DataStore;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
-import io.github.scarger.placeholders.model.response.AuthenticationResponse;
-import io.github.scarger.placeholders.model.request.AuthenticationRequest;
+import com.google.api.services.youtube.YouTube;
+import com.google.api.services.youtube.YouTubeScopes;
+import io.github.scarger.placeholders.CoreService;
+import io.github.scarger.placeholders.service.session.Session;
 
+import java.io.FileReader;
 import java.io.IOException;
-import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 
 public class GoogleAuthService {
 
-    private final String clientId = "130579102697-jga0139h5eqkscf6fptn2jppercepm73.apps.googleusercontent.com";
-    private final String clientSecret = "9ESSnE4OjSeOgbfou97UkVZH";
     private final String redirectURL = "postmessage";
 
     private final HttpTransport transport;
@@ -25,71 +29,88 @@ public class GoogleAuthService {
     private final GoogleIdTokenVerifier tokenVerifier;
     private final GoogleAuthorizationCodeFlow codeFlow;
 
-    private final MessageDigest md;
+    private final MemoryDataStoreFactory storeFactory;
+    private final GoogleClientSecrets clientSecrets;
 
-    public GoogleAuthService() throws Exception {
+    private CoreService context;
+
+    public GoogleAuthService(CoreService context) throws Exception {
+        storeFactory = new MemoryDataStoreFactory();
         transport = GoogleNetHttpTransport.newTrustedTransport();
         jsonFactory = JacksonFactory.getDefaultInstance();
+        clientSecrets = GoogleClientSecrets.load(jsonFactory, new FileReader("client_secret.json"));
         tokenVerifier = new GoogleIdTokenVerifier
                 .Builder(transport, jsonFactory)
-                .setAudience(Collections.singletonList(clientId))
+                .setAudience(Collections.singletonList(clientSecrets.getDetails().getClientId()))
                 .build();
 
         HashSet<String> perms = new HashSet<>();
-        perms.add("");
+        perms.add(YouTubeScopes.YOUTUBE);
         codeFlow = new GoogleAuthorizationCodeFlow.Builder(
                         GoogleNetHttpTransport.newTrustedTransport(),
                         JacksonFactory.getDefaultInstance(),
-                        clientId,
-                        clientSecret,
+                        clientSecrets.getDetails().getClientId(),
+                        clientSecrets.getDetails().getClientSecret(),
                         perms)
                         .setAccessType("offline")
-                        .setDataStoreFactory(new MemoryDataStoreFactory())
+                        .setDataStoreFactory(storeFactory)
                         .build();
-        md = MessageDigest.getInstance("MD5");
+
+        this.context = context;
     }
 
 
-    public AuthenticationResponse authenticate(AuthenticationRequest authReq) {
+    public String authenticate(String authCode) {
 
         /*
         TODO
-        make client save GOOGLE ID TOKEN IN SESSION, also do a request before the auth
-        to see if its credentials are already there to avoid re-signing in / picking account / consent
         implement own DataStoreFactory with MongoDB
 
         TODO CUSTOM IMAGE COMPONENT FOR PRELOAD (loader color prop: default blue),
          USE MICROSERVICE ARCHITECTURE (use common lib, i.e classes like RequestError idk)
+         Set Expiration for Session IDS on server, and take them out (thinking maybe 14d, idek)
+         Use Incremental OAUTH
+         CACHE REQUEST RESPONSES (CHECK DOCS FOR SOMETING FOR DIS)
         */
 
         try {
-            GoogleTokenResponse tokenResponse = codeFlow.newTokenRequest(authReq.getAuthCode())
+            GoogleTokenResponse tokenResponse = codeFlow.newTokenRequest(authCode)
+                    .set("include_granted_scopes", true)
                     .setRedirectUri(redirectURL)
                     .execute();
 
+            GoogleIdToken idToken = tokenVerifier.verify(tokenResponse.getIdToken());
+
             String sessionId = UUID.randomUUID().toString();
-            codeFlow.createAndStoreCredential(tokenResponse, sessionId);
-            return new AuthenticationResponse(sessionId);
+            String subject = idToken.getPayload().getSubject();
+            codeFlow.createAndStoreCredential(tokenResponse, subject);
+            context.getSessionManager().getSessions().put(sessionId, new Session(sessionId, subject));
+            return sessionId;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
 
-    public boolean isLoggedIn(String sessionId) {
+    public Credential getCredential(String userId) {
         try {
-            return codeFlow.getCredentialDataStore().containsKey(sessionId);
+            return codeFlow.loadCredential(userId);
         } catch (IOException e) {
-            return false;
+            e.printStackTrace();
+            return null;
         }
     }
 
-    public void invalidate(String sessionId) {
-        try {
-            codeFlow.getCredentialDataStore().delete(sessionId);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public DataStore<StoredCredential> getCredentials() {
+        return codeFlow.getCredentialDataStore();
+    }
+
+    public YouTube getYoutubeService(Credential credential) {
+        return new YouTube.Builder(
+                transport,
+                jsonFactory,
+                credential
+        ).setApplicationName("Youtube UA").build();
     }
 
 }

@@ -2,8 +2,11 @@ package io.github.scarger.placeholders;
 
 import io.github.scarger.placeholders.route.AuthenticationRoute;
 import io.github.scarger.placeholders.route.LoginStatusRoute;
+import io.github.scarger.placeholders.route.api.ProfileRoute;
 import io.github.scarger.placeholders.service.GoogleAuthService;
+import io.github.scarger.placeholders.service.session.SessionManager;
 import io.github.scarger.placeholders.util.CoreUtil;
+import spark.Response;
 
 import static spark.Spark.*;
 
@@ -11,10 +14,12 @@ public class CoreService {
 
     private CoreUtil coreUtil;
     private GoogleAuthService authService;
+    private SessionManager sessionManager;
 
     public void start() throws Exception {
         coreUtil = new CoreUtil();
-        authService = new GoogleAuthService();
+        authService = new GoogleAuthService(this);
+        sessionManager = new SessionManager(this);
         registerMiddleware();
         registerRoutes();
         System.out.println("All systems setup!");
@@ -23,10 +28,27 @@ public class CoreService {
     private void registerRoutes() {
         post("/authenticate", "application/json", new AuthenticationRoute(this), coreUtil.toJson());
         get("/auth/status", "application/json", new LoginStatusRoute(this), coreUtil.toJson());
+        path("/api/v1", () -> {
+           before("/*", (req, res) -> {
+               if(!sessionManager.isLoggedIn(req.cookie("ph_sid"))) {
+                   halt(401, "You're not logged in!");
+               }
+           });
+           get("/profile", new ProfileRoute(this), coreUtil.toJson());
+        });
     }
 
     private void registerMiddleware() {
-        before((req, res) -> res.header("Access-Control-Allow-Origin", "http://localhost:8080"));
+        before((req, res) -> {
+            disableCors(res);
+        });
+    }
+
+    private void disableCors(Response res) {
+        res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+        res.header("Access-Control-Allow-Origin", "http://localhost:8080");
+        res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,");
+        res.header("Access-Control-Allow-Credentials", "true");
     }
 
     public CoreUtil util() {
@@ -35,6 +57,10 @@ public class CoreService {
 
     public GoogleAuthService getAuth() {
         return authService;
+    }
+
+    public SessionManager getSessionManager() {
+        return sessionManager;
     }
 
 }
