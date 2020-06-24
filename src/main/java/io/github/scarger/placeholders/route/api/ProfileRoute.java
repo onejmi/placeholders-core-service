@@ -6,7 +6,7 @@ import com.google.api.services.youtube.model.Channel;
 import com.google.api.services.youtube.model.ChannelListResponse;
 import io.github.scarger.placeholders.CoreService;
 import io.github.scarger.placeholders.model.response.ProfileResponse;
-import io.github.scarger.placeholders.service.session.Session;
+import io.github.scarger.placeholders.util.YoutubeUtil;
 import spark.Request;
 import spark.Response;
 
@@ -23,22 +23,13 @@ public class ProfileRoute implements spark.Route {
 
     @Override
     public Object handle(Request request, Response response) {
-        Session session = context.getSessionManager().getSessions().get(request.cookie("ph_sid"));
-        Credential credential = context.getAuth().getCredential(session.getUserId());
-        YouTube youtube = context.getAuth().getYoutubeService(credential);
-        try {
-            YouTube.Channels.List req = youtube.channels().list("snippet,contentDetails,statistics");
-            ChannelListResponse res = req.setMine(true).execute();
-            if(res.getItems().size() > 0) {
-                Channel channel = res.getItems().get(0);
-                String name = channel.getSnippet().getTitle();
-                String image = channel.getSnippet().getThumbnails().getDefault().getUrl();
-                int subCount = channel.getStatistics().getSubscriberCount().intValue();
-                return new ProfileResponse(name, image, subCount);
-            }
-            return null;
-        } catch (IOException e) {
-            e.printStackTrace();
+        YouTube youtube = YoutubeUtil.getInstanceFromRequest(context, request);
+        Channel channel = YoutubeUtil.getOwnChannel(youtube, "snippet,contentDetails,statistics");
+        if(channel != null) {
+            String name = channel.getSnippet().getTitle();
+            String image = channel.getSnippet().getThumbnails().getDefault().getUrl();
+            int subCount = channel.getStatistics().getSubscriberCount().intValue();
+            return new ProfileResponse(name, image, subCount);
         }
         return null;
     }

@@ -3,10 +3,12 @@ package io.github.scarger.placeholders;
 import io.github.scarger.placeholders.route.AuthenticationRoute;
 import io.github.scarger.placeholders.route.LoginStatusRoute;
 import io.github.scarger.placeholders.route.api.ProfileRoute;
+import io.github.scarger.placeholders.route.api.VideoRoute;
 import io.github.scarger.placeholders.service.GoogleAuthService;
 import io.github.scarger.placeholders.service.session.SessionManager;
 import io.github.scarger.placeholders.util.CoreUtil;
 import spark.Response;
+import spark.Spark;
 
 import static spark.Spark.*;
 
@@ -23,6 +25,9 @@ public class CoreService {
         registerMiddleware();
         registerRoutes();
         System.out.println("All systems setup!");
+        Spark.exception(Exception.class, (exception, request, response) -> {
+            exception.printStackTrace();
+        });
     }
 
     private void registerRoutes() {
@@ -34,7 +39,10 @@ public class CoreService {
                    halt(401, "You're not logged in!");
                }
            });
-           get("/profile", new ProfileRoute(this), coreUtil.toJson());
+           path("/profile", () -> {
+               get("/", new ProfileRoute(this), coreUtil.toJson());
+               get("/uploads", new VideoRoute(this), coreUtil.toJson());
+           });
         });
     }
 
