@@ -36,15 +36,16 @@ public class CoreService {
         get("/auth/status", "application/json", new LoginStatusRoute(this), coreUtil.toJson());
         path("/api/v1", () -> {
            before("/*", (req, res) -> {
-               if(!sessionManager.isLoggedIn(req.cookie("ph_sid"))) {
+               if(!req.requestMethod().equalsIgnoreCase("OPTIONS") && !sessionManager.isLoggedIn(req.cookie("ph_sid"))) {
                    halt(401, "You're not logged in!");
                }
            });
+           options("/*", (req, res) -> "OK");
            path("/profile", () -> {
                get("", new ProfileRoute(this), coreUtil.toJson());
                path("/uploads", () -> {
                    get("", new VideoRoute(this), coreUtil.toJson());
-                   path("/update", () -> post("/title", new VideoTitleRoute(this), coreUtil.toJson()));
+                   path("/update", () -> patch("/title", new VideoTitleRoute(this), coreUtil.toJson()));
                });
            });
         });
@@ -55,7 +56,7 @@ public class CoreService {
     }
 
     private void disableCors(Response res) {
-        res.header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+        res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
         res.header("Access-Control-Allow-Origin", "http://localhost:8080");
         res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,");
         res.header("Access-Control-Allow-Credentials", "true");
