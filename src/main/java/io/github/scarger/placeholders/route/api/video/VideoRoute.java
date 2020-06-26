@@ -1,4 +1,4 @@
-package io.github.scarger.placeholders.route.api;
+package io.github.scarger.placeholders.route.api.video;
 
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.Channel;
@@ -33,7 +33,9 @@ public class VideoRoute implements Route {
             return res.getItems()
                     .stream()
                     .map(PlaylistItem::getSnippet)
-                    .map(snippet -> new VideosResponse(snippet.getTitle(), snippet.getThumbnails().getStandard().getUrl()))
+                    .map(snippet -> new VideosResponse(snippet.getTitle(),
+                            snippet.getThumbnails().getStandard().getUrl(),
+                            snippet.getResourceId().getVideoId()))
                     .collect(Collectors.toList());
         }
         return null;

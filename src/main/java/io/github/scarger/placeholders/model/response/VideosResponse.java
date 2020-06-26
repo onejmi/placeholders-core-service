@@ -4,10 +4,12 @@ public class VideosResponse {
 
     private String title;
     private String thumbnailUrl;
+    private String id;
 
-    public VideosResponse(String title, String thumbnailUrl) {
+    public VideosResponse(String title, String thumbnailUrl, String videoId) {
         this.title = title;
         this.thumbnailUrl = thumbnailUrl;
+        this.id = videoId;
     }
 
     public String getTitle() {
@@ -16,5 +18,9 @@ public class VideosResponse {
 
     public String getThumbnailUrl() {
         return thumbnailUrl;
+    }
+
+    public String getId() {
+        return id;
     }
 }
