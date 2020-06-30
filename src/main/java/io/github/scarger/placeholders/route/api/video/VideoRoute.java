@@ -30,6 +30,9 @@ public class VideoRoute implements Route {
             YouTube.PlaylistItems.List req = youtube.playlistItems().list("snippet,contentDetails,status");
             PlaylistItemListResponse res = req.setPlaylistId(uploadsId).execute();
 
+            /*TODO Title that is returned should be the template that's stored on DB, only if that is not present
+            TODO do we return the current title of the video (on Youtube)*/
+
             return res.getItems()
                     .stream()
                     .map(PlaylistItem::getSnippet)

@@ -7,10 +7,10 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStore;
-import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
 import io.github.scarger.placeholders.CoreService;
+import io.github.scarger.placeholders.service.data.google.CredentialStoreFactory;
 import io.github.scarger.placeholders.service.session.Session;
 
 import java.io.FileReader;
@@ -29,13 +29,13 @@ public class GoogleAuthService {
     private final GoogleIdTokenVerifier tokenVerifier;
     private final GoogleAuthorizationCodeFlow codeFlow;
 
-    private final MemoryDataStoreFactory storeFactory;
+    private final CredentialStoreFactory storeFactory;
     private final GoogleClientSecrets clientSecrets;
 
     private CoreService context;
 
     public GoogleAuthService(CoreService context) throws Exception {
-        storeFactory = new MemoryDataStoreFactory();
+        storeFactory = new CredentialStoreFactory(context);
         transport = GoogleNetHttpTransport.newTrustedTransport();
         jsonFactory = JacksonFactory.getDefaultInstance();
         clientSecrets = GoogleClientSecrets.load(jsonFactory, new FileReader("client_secret.json"));
@@ -66,7 +66,6 @@ public class GoogleAuthService {
         TODO
         implement own DataStoreFactory with MongoDB
 
-        TODO CUSTOM IMAGE COMPONENT FOR PRELOAD (loader color prop: default blue),
          USE MICROSERVICE ARCHITECTURE (use common lib, i.e classes like RequestError idk)
          Set Expiration for Session IDS on server, and take them out (thinking maybe 14d, idek)
          Use Incremental OAUTH

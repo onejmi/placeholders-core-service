@@ -6,6 +6,7 @@ import io.github.scarger.placeholders.route.api.ProfileRoute;
 import io.github.scarger.placeholders.route.api.video.VideoRoute;
 import io.github.scarger.placeholders.route.api.video.VideoTitleRoute;
 import io.github.scarger.placeholders.service.GoogleAuthService;
+import io.github.scarger.placeholders.service.data.DatabaseManager;
 import io.github.scarger.placeholders.service.session.SessionManager;
 import io.github.scarger.placeholders.util.CoreUtil;
 import spark.Response;
@@ -18,11 +19,13 @@ public class CoreService {
     private CoreUtil coreUtil;
     private GoogleAuthService authService;
     private SessionManager sessionManager;
+    private DatabaseManager databaseManager;
 
     public void start() throws Exception {
         coreUtil = new CoreUtil();
         authService = new GoogleAuthService(this);
         sessionManager = new SessionManager(this);
+        databaseManager = new DatabaseManager(this);
         registerMiddleware();
         registerRoutes();
         System.out.println("All systems setup!");
@@ -56,7 +59,7 @@ public class CoreService {
     }
 
     private void disableCors(Response res) {
-        res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+        res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
         res.header("Access-Control-Allow-Origin", "http://localhost:8080");
         res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,");
         res.header("Access-Control-Allow-Credentials", "true");
@@ -72,6 +75,10 @@ public class CoreService {
 
     public SessionManager getSessionManager() {
         return sessionManager;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 
 }
