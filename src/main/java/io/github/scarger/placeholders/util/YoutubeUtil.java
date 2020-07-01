@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class YoutubeUtil {
     public static YouTube getInstanceFromRequest(CoreService context, Request request) {
-        Session session = context.getSessionManager().getSessions().get(request.cookie("ph_sid"));
+        Session session = context.getSessionManager().get(request.cookie("ph_sid"));
         Credential credential = context.getAuth().getCredential(session.getUserId());
         return context.getAuth().getYoutubeService(credential);
     }

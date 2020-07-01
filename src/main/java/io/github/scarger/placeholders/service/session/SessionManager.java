@@ -1,39 +1,39 @@
 package io.github.scarger.placeholders.service.session;
 
 import io.github.scarger.placeholders.CoreService;
+import io.github.scarger.placeholders.model.collection.UserSessionCollection;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SessionManager {
 
-    //todo port this to MongoDB or redis
-
     private final CoreService context;
-    private final Map<String, Session> currentSessions;
+    private final UserSessionCollection sessionCollection;
 
     public SessionManager(CoreService context) {
         this.context = context;
-        currentSessions = new HashMap<>();
+        sessionCollection = new UserSessionCollection(context.getDatabaseManager().getDB());
     }
 
-    public Map<String, Session> getSessions() {
-        return currentSessions;
+    public void add(Session session) {
+        sessionCollection.add(session);
+    }
+
+    public Session get(String sessionId) {
+        return sessionCollection.get(sessionId);
     }
 
     public void invalidate(String sessionId) {
-        currentSessions.put(sessionId, null);
+        sessionCollection.remove(sessionId);
     }
 
     public boolean isLoggedIn(String sessionId) {
         try {
-            if(!currentSessions.containsKey(sessionId)) {
+            Session session = get(sessionId);
+            if(session == null) {
                 return false;
             }
 
-            Session session = currentSessions.get(sessionId);
             if(session.isExpired()) {
                 invalidate(sessionId);
                 return false;
@@ -44,6 +44,5 @@ public class SessionManager {
             return false;
         }
     }
-
 
 }

@@ -82,8 +82,8 @@ public class GoogleAuthService {
 
             String sessionId = UUID.randomUUID().toString();
             String subject = idToken.getPayload().getSubject();
-            codeFlow.createAndStoreCredential(tokenResponse, subject);
-            context.getSessionManager().getSessions().put(sessionId, new Session(sessionId, subject));
+            if(codeFlow.loadCredential(subject) == null) codeFlow.createAndStoreCredential(tokenResponse, subject);
+            context.getSessionManager().add(new Session(sessionId, subject));
             return sessionId;
         } catch (Exception e) {
             e.printStackTrace();

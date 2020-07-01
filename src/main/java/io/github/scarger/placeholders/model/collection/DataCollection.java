@@ -5,7 +5,7 @@ import com.mongodb.client.MongoDatabase;
 
 public abstract class DataCollection<T> {
 
-    private MongoCollection<T> collection;
+    protected MongoCollection<T> collection;
 
     public DataCollection(MongoDatabase database, String name, Class<T> documentClass) {
         collection = database.getCollection(name, documentClass);

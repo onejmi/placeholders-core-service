@@ -23,9 +23,12 @@ public class CoreService {
 
     public void start() throws Exception {
         coreUtil = new CoreUtil();
+
+        databaseManager = new DatabaseManager(this);
+        databaseManager.init();
+
         authService = new GoogleAuthService(this);
         sessionManager = new SessionManager(this);
-        databaseManager = new DatabaseManager(this);
         registerMiddleware();
         registerRoutes();
         System.out.println("All systems setup!");
