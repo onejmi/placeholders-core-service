@@ -5,6 +5,7 @@ import com.google.api.services.youtube.model.Channel;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import io.github.scarger.placeholders.CoreService;
+import io.github.scarger.placeholders.model.collection.document.account.UserAccount;
 import io.github.scarger.placeholders.model.response.VideosResponse;
 import io.github.scarger.placeholders.util.YoutubeUtil;
 import spark.Request;
@@ -36,9 +37,17 @@ public class VideoRoute implements Route {
             return res.getItems()
                     .stream()
                     .map(PlaylistItem::getSnippet)
-                    .map(snippet -> new VideosResponse(snippet.getTitle(),
-                            snippet.getThumbnails().getStandard().getUrl(),
-                            snippet.getResourceId().getVideoId()))
+                    .map(snippet -> {
+                        String id = snippet.getResourceId().getVideoId();
+                        String userId = context.getSessionManager().get(request).getUserId();
+                        UserAccount account = context.getUserManager().getUsers().getUser(userId);
+                        String title =
+                                account.getTitles().containsKey((Object) id) ?
+                                        (String) account.getTitles().get(id) :
+                                        snippet.getTitle();
+                        String thumbnailUrl = snippet.getThumbnails().getStandard().getUrl();
+                       return  new VideosResponse(title, thumbnailUrl, id);
+                    })
                     .collect(Collectors.toList());
         }
         return null;

@@ -2,6 +2,7 @@ package io.github.scarger.placeholders.service.session;
 
 import io.github.scarger.placeholders.CoreService;
 import io.github.scarger.placeholders.model.collection.UserSessionCollection;
+import spark.Request;
 
 import java.io.IOException;
 
@@ -21,6 +22,10 @@ public class SessionManager {
 
     public Session get(String sessionId) {
         return sessionCollection.get(sessionId);
+    }
+
+    public Session get(Request request) {
+        return context.getSessionManager().get(request.cookie("ph_sid"));
     }
 
     public void invalidate(String sessionId) {

@@ -11,6 +11,7 @@ import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.YouTubeScopes;
 import io.github.scarger.placeholders.CoreService;
 import io.github.scarger.placeholders.service.data.google.CredentialStoreFactory;
+import io.github.scarger.placeholders.service.data.user.UserManager;
 import io.github.scarger.placeholders.service.session.Session;
 
 import java.io.FileReader;
@@ -84,6 +85,10 @@ public class GoogleAuthService {
             String subject = idToken.getPayload().getSubject();
             if(codeFlow.loadCredential(subject) == null) codeFlow.createAndStoreCredential(tokenResponse, subject);
             context.getSessionManager().add(new Session(sessionId, subject));
+
+            UserManager um = context.getUserManager();
+            if(!um.getUsers().isUserPresent(subject)) um.getUsers().addUser(subject);
+
             return sessionId;
         } catch (Exception e) {
             e.printStackTrace();

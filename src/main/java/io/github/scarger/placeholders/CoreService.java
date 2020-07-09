@@ -7,19 +7,24 @@ import io.github.scarger.placeholders.route.api.video.VideoRoute;
 import io.github.scarger.placeholders.route.api.video.VideoTitleRoute;
 import io.github.scarger.placeholders.service.GoogleAuthService;
 import io.github.scarger.placeholders.service.data.DatabaseManager;
+import io.github.scarger.placeholders.service.data.Disposable;
+import io.github.scarger.placeholders.service.data.user.UserManager;
 import io.github.scarger.placeholders.service.session.SessionManager;
+import io.github.scarger.placeholders.service.video.VideoTitleManager;
 import io.github.scarger.placeholders.util.CoreUtil;
 import spark.Response;
 import spark.Spark;
 
 import static spark.Spark.*;
 
-public class CoreService {
+public class CoreService implements Disposable {
 
     private CoreUtil coreUtil;
     private GoogleAuthService authService;
     private SessionManager sessionManager;
     private DatabaseManager databaseManager;
+    private UserManager userManager;
+    private VideoTitleManager videoTitleManager;
 
     public void start() throws Exception {
         coreUtil = new CoreUtil();
@@ -27,8 +32,10 @@ public class CoreService {
         databaseManager = new DatabaseManager(this);
         databaseManager.init();
 
+        userManager = new UserManager(this);
         authService = new GoogleAuthService(this);
         sessionManager = new SessionManager(this);
+        videoTitleManager = new VideoTitleManager(this);
         registerMiddleware();
         registerRoutes();
         System.out.println("All systems setup!");
@@ -84,4 +91,16 @@ public class CoreService {
         return databaseManager;
     }
 
+    public UserManager getUserManager() {
+        return userManager;
+    }
+
+    public VideoTitleManager getVideoTitleManager() {
+        return videoTitleManager;
+    }
+
+    @Override
+    public void dispose() {
+        videoTitleManager.dispose();
+    }
 }
