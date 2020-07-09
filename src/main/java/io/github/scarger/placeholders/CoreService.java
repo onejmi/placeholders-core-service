@@ -65,10 +65,10 @@ public class CoreService implements Disposable {
     }
 
     private void registerMiddleware() {
-        before((req, res) -> disableCors(res));
+        before((req, res) -> configureCors(res));
     }
 
-    private void disableCors(Response res) {
+    private void configureCors(Response res) {
         res.header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
         res.header("Access-Control-Allow-Origin", "http://localhost:8080");
         res.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,");
