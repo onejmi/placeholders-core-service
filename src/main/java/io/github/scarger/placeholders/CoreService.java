@@ -3,12 +3,16 @@ package io.github.scarger.placeholders;
 import io.github.scarger.placeholders.route.AuthenticationRoute;
 import io.github.scarger.placeholders.route.LoginStatusRoute;
 import io.github.scarger.placeholders.route.api.ProfileRoute;
+import io.github.scarger.placeholders.route.api.placholder.AllPlaceholdersListRoute;
+import io.github.scarger.placeholders.route.api.placholder.PlaceholderChangeRoute;
+import io.github.scarger.placeholders.route.api.placholder.PlaceholderListRoute;
 import io.github.scarger.placeholders.route.api.video.VideoRoute;
 import io.github.scarger.placeholders.route.api.video.VideoTitleRoute;
 import io.github.scarger.placeholders.service.GoogleAuthService;
 import io.github.scarger.placeholders.service.data.DatabaseManager;
 import io.github.scarger.placeholders.service.data.Disposable;
 import io.github.scarger.placeholders.service.data.user.UserManager;
+import io.github.scarger.placeholders.service.placeholder.PlaceholderActivator;
 import io.github.scarger.placeholders.service.session.SessionManager;
 import io.github.scarger.placeholders.service.video.VideoTitleManager;
 import io.github.scarger.placeholders.util.CoreUtil;
@@ -24,6 +28,7 @@ public class CoreService implements Disposable {
     private SessionManager sessionManager;
     private DatabaseManager databaseManager;
     private UserManager userManager;
+    private PlaceholderActivator placeholderActivator;
     private VideoTitleManager videoTitleManager;
 
     public void start() throws Exception {
@@ -35,6 +40,7 @@ public class CoreService implements Disposable {
         userManager = new UserManager(this);
         authService = new GoogleAuthService(this);
         sessionManager = new SessionManager(this);
+        placeholderActivator = new PlaceholderActivator(this);
         videoTitleManager = new VideoTitleManager(this);
         registerMiddleware();
         registerRoutes();
@@ -54,11 +60,16 @@ public class CoreService implements Disposable {
                }
            });
            options("/*", (req, res) -> "OK");
+           get("/placeholders", new AllPlaceholdersListRoute(this), coreUtil.toJson());
            path("/profile", () -> {
                get("", new ProfileRoute(this), coreUtil.toJson());
                path("/uploads", () -> {
                    get("", new VideoRoute(this), coreUtil.toJson());
-                   path("/update", () -> patch("/title", new VideoTitleRoute(this), coreUtil.toJson()));
+                   path("/update", () -> put("/title", new VideoTitleRoute(this), coreUtil.toJson()));
+               });
+               path("/placeholders", () -> {
+                   get("", new PlaceholderListRoute(this), coreUtil.toJson());
+                   patch("", new PlaceholderChangeRoute(this), coreUtil.toJson());
                });
            });
         });
@@ -93,6 +104,10 @@ public class CoreService implements Disposable {
 
     public UserManager getUserManager() {
         return userManager;
+    }
+
+    public PlaceholderActivator getPlaceholderActivator() {
+        return placeholderActivator;
     }
 
     public VideoTitleManager getVideoTitleManager() {

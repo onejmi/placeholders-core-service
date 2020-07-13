@@ -57,7 +57,7 @@ public class TitleChangeScheduler implements Disposable {
                     TitleChangeTransaction transaction = changeQueue.pollFirst();
                     String formattedTitle = titleContext
                             .getTitleTransformer()
-                            .transformTitle(transaction.getUserId(), transaction.getUnformattedTitle());
+                            .transformTitle(transaction.getUserId(), transaction.getVideoId(), transaction.getUnformattedTitle());
                     titleContext.updateTitle(transaction.getUserId(), transaction.getVideoId(), formattedTitle);
                 }
             }

@@ -5,7 +5,7 @@ import io.github.scarger.placeholders.model.collection.document.account.AccountR
 import io.github.scarger.placeholders.model.collection.document.account.UserAccount;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.set;
+import static com.mongodb.client.model.Updates.*;
 
 public class UserCollection extends DataCollection<UserAccount>{
     public UserCollection(MongoDatabase database) {
@@ -26,6 +26,14 @@ public class UserCollection extends DataCollection<UserAccount>{
 
     public void setTitle(String userId, String videoId, String unformattedTitle) {
         collection.updateOne(eq("_id", userId), set("titles." + videoId, unformattedTitle));
+    }
+
+    public void addPlaceholder(String userId, String placeholderName) {
+        collection.updateOne(eq("_id", userId), addToSet("currentPlaceholders", placeholderName));
+    }
+
+    public void removePlaceholder(String userId, String placeholderName) {
+        collection.updateOne(eq("_id", userId), pull("currentPlaceholders", placeholderName));
     }
 
     public void setRole(String userId, AccountRole role) {

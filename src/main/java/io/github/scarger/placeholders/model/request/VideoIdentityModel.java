@@ -2,8 +2,8 @@ package io.github.scarger.placeholders.model.request;
 
 public class VideoIdentityModel {
 
-    private String videoId;
-    private String newTitle;
+    private final String videoId;
+    private final String newTitle;
 
     public VideoIdentityModel(String videoId, String newTitle) {
         this.videoId = videoId;
